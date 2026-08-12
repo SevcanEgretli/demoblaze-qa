@@ -1,0 +1,21 @@
+node_modules/
+
+# Cypress artifacts
+cypress/screenshots/
+cypress/videos/
+cypress/downloads/
+cypress/reports/
+
+# Local environment overrides (may contain real credentials)
+cypress.env.json
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Local Claude Code settings (may contain command history with test creds)
+.claude/settings.local.json
+
+# Logs
+*.log

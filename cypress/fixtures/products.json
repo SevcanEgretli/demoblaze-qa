@@ -1,0 +1,19 @@
+{
+  "laptops": {
+    "primary": {
+      "id": 8,
+      "title": "Sony vaio i5",
+      "price": 790
+    },
+    "secondary": {
+      "id": 9,
+      "title": "Sony vaio i7",
+      "price": 790
+    },
+    "onHomePageTwo": {
+      "id": 15,
+      "title": "MacBook Pro",
+      "price": 1100
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "cypress"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:cypress/recommended",
+    "prettier"
+  ],
+  "env": {
+    "node": true,
+    "cypress/globals": true
+  },
+  "rules": {
+    "cypress/no-unnecessary-waiting": "error",
+    "cypress/unsafe-to-chain-command": "warn",
+    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }]
+  },
+  "ignorePatterns": ["node_modules/"]
+}

@@ -1,0 +1,10 @@
+{
+  "validOrder": {
+    "name": "QA Tester",
+    "country": "Turkiye",
+    "city": "Istanbul",
+    "creditCard": "4111111111111111",
+    "month": "12",
+    "year": "2027"
+  }
+}
