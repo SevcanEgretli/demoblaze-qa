@@ -23,6 +23,12 @@ describe('Purchase Journey (E2E)', () => {
     });
   });
 
+  beforeEach(() => {
+    // Clean before use: an interrupted earlier run may have left items behind
+    // (the cart is keyed by username, so no login is needed to clear it).
+    cy.clearCartByApi(username);
+  });
+
   afterEach(() => {
     // Safety net only: a successful purchase already empties the cart itself
     // (asserted below via the /deletecart wait), this just guards against a

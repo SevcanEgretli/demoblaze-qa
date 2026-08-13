@@ -7,7 +7,6 @@ import BasePage from './BasePage';
 class ProductPage extends BasePage {
   protected readonly path = '/prod.html';
 
-  // --- Locators -----------------------------------------------------------
   private get productName() {
     return cy.get('.name');
   }
@@ -20,8 +19,11 @@ class ProductPage extends BasePage {
     return cy.contains('a', 'Add to cart');
   }
 
-  // --- Actions ------------------------------------------------------------
-  /** Navigates straight to a product's detail page by id. */
+  /**
+   * Navigates straight to a product's detail page by id.
+   * "idp_" (with the trailing underscore) is demoblaze's real query
+   * parameter name — not a typo.
+   */
   visitProduct(productId: number): void {
     cy.visit(`${this.path}?idp_=${productId}`);
   }
@@ -30,7 +32,6 @@ class ProductPage extends BasePage {
     this.addToCartButton.click();
   }
 
-  // --- State readers (specs assert on these) ------------------------------
   getProductName(): Cypress.Chainable<JQuery<HTMLElement>> {
     return this.productName;
   }

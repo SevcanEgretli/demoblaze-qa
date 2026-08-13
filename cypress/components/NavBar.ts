@@ -1,10 +1,8 @@
 /**
  * Top navigation bar — rendered on every page of demoblaze, so it lives as
  * a shared component instead of being repeated in each page object.
- * Page objects expose it via BasePage (`this.navBar`).
  */
 class NavBar {
-  // --- Locators -----------------------------------------------------------
   private get logInLink() {
     return cy.get('#login2');
   }
@@ -21,7 +19,6 @@ class NavBar {
     return cy.get('#nameofuser');
   }
 
-  // --- Actions ------------------------------------------------------------
   openLogInModal(): void {
     this.logInLink.click();
   }
@@ -34,7 +31,6 @@ class NavBar {
     this.cartLink.click();
   }
 
-  // --- State readers (specs assert on these) ------------------------------
   getLoggedInUserLabel(): Cypress.Chainable<JQuery<HTMLElement>> {
     return this.loggedInUserLabel;
   }

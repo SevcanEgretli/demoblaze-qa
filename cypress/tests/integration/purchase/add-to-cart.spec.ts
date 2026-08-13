@@ -2,7 +2,6 @@ import { ProductPage } from '../../../pages';
 import type { Product } from '../../../types/models';
 
 describe('Add to Cart', () => {
-  const apiUrl = Cypress.env('apiUrl') as string;
   const username = Cypress.env('USERNAME') as string;
   const password = Cypress.env('PASSWORD') as string;
   let laptop: Product;
@@ -15,9 +14,12 @@ describe('Add to Cart', () => {
 
   beforeEach(() => {
     cy.loginByApi(username, password);
+    // Clean before use: an interrupted earlier run may have left items behind.
+    cy.clearCartByApi(username);
   });
 
   afterEach(() => {
+    // Courtesy cleanup so the shared demo account isn't left with test state.
     cy.clearCartByApi(username);
   });
 
@@ -32,15 +34,8 @@ describe('Add to Cart', () => {
     cy.wait('@addToCart').its('response.statusCode').should('equal', 200);
     cy.get('@alert').should('have.been.calledOnceWith', 'Product added.');
 
-    cy.getCookie('tokenp_').then((cookie) => {
-      cy.request({
-        method: 'POST',
-        url: `${apiUrl}/viewcart`,
-        body: { cookie: cookie!.value, flag: true },
-      }).then((response) => {
-        const items = response.body.Items as Array<{ prod_id: number }>;
-        expect(items.map((item) => item.prod_id)).to.include(laptop.id);
-      });
+    cy.getCartItemsByApi().then((items) => {
+      expect(items.map((item) => item.prod_id)).to.include(laptop.id);
     });
   });
 });

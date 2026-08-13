@@ -10,44 +10,46 @@ class CheckoutModal extends BaseModal {
     super('#orderModal');
   }
 
-  // --- Locators -----------------------------------------------------------
+  // Form fields are scoped to the modal root: their ids (#name, #city, ...)
+  // are generic enough to collide with other page elements.
   private get nameInput() {
-    return cy.get('#name');
+    return this.root.find('#name');
   }
 
   private get countryInput() {
-    return cy.get('#country');
+    return this.root.find('#country');
   }
 
   private get cityInput() {
-    return cy.get('#city');
+    return this.root.find('#city');
   }
 
   private get creditCardInput() {
-    return cy.get('#card');
+    return this.root.find('#card');
   }
 
   private get monthInput() {
-    return cy.get('#month');
+    return this.root.find('#month');
   }
 
   private get yearInput() {
-    return cy.get('#year');
+    return this.root.find('#year');
   }
 
   private get purchaseButton() {
     return this.root.contains('button', 'Purchase');
   }
 
+  // The sweetalert confirmation renders outside #orderModal, so these two
+  // cannot be scoped to the modal root.
   private get confirmationDialog() {
     return cy.get('.sweet-alert');
   }
 
   private get confirmationOkButton() {
-    return cy.get('.confirm');
+    return cy.get('.sweet-alert button.confirm');
   }
 
-  // --- Actions ------------------------------------------------------------
   fillOrderForm(info: CheckoutInfo): void {
     this.waitUntilReady();
     this.nameInput.type(info.name);
@@ -73,7 +75,6 @@ class CheckoutModal extends BaseModal {
     this.confirmationOkButton.click();
   }
 
-  // --- State readers ------------------------------------------------------
   getConfirmationDialog(): Cypress.Chainable<JQuery<HTMLElement>> {
     return this.confirmationDialog;
   }

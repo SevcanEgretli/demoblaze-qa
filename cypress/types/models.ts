@@ -19,3 +19,13 @@ export interface Product {
   title: string;
   price: number;
 }
+
+/**
+ * A stored cart entry as returned by /viewcart. The "cookie" field holds the
+ * plain username, not the auth token (see clearCartByApi in commands.ts).
+ */
+export interface CartItem {
+  id: string;
+  cookie: string;
+  prod_id: number;
+}

@@ -1,12 +1,26 @@
 import { encodePassword } from '../utils/encoding';
+import type { CartItem } from '../types/models';
 
 /**
  * Custom commands. These wrap flows needed by MULTIPLE spec files across
- * different pages (auth, cart seeding) — see skills/SKILLS.md rule 3.
+ * different pages (auth, cart seeding) — see docs/CONTRIBUTING.md.
  * Types are declared in cypress/types/index.d.ts; keep both in sync.
+ *
+ * Demoblaze's API reports failures as HTTP 200 with an { errorMessage } body,
+ * so cy.request's built-in non-2xx check never catches them. Every command
+ * below asserts the body itself, so a failed setup step fails the test
+ * immediately with a clear message instead of surfacing minutes later as an
+ * unrelated assertion.
  */
 
 const apiUrl = () => Cypress.env('apiUrl') as string;
+
+function failOnApiError(body: unknown, context: string): void {
+  const errorMessage = (body as { errorMessage?: string } | null)?.errorMessage;
+  if (errorMessage) {
+    throw new Error(`${context} failed — API returned: "${errorMessage}"`);
+  }
+}
 
 /**
  * Logs in directly against the API (mirrors the exact request the UI sends)
@@ -22,6 +36,7 @@ Cypress.Commands.add('loginByApi', (username: string, password: string) => {
       body: { username, password: encodePassword(password) },
     })
     .then((response) => {
+      failOnApiError(response.body, `loginByApi("${username}")`);
       const token = (response.body as string).replace('Auth_token: ', '');
       return cy.setCookie('tokenp_', token).then(() => token);
     });
@@ -47,7 +62,31 @@ Cypress.Commands.add('addProductToCartByApi', (productId: number) => {
         prod_id: productId,
         flag: true,
       },
+    }).then((response) => {
+      failOnApiError(response.body, `addProductToCartByApi(${productId})`);
     });
+  });
+});
+
+/**
+ * Returns the authenticated user's cart items via /viewcart.
+ * Requires cy.loginByApi to have run first in the same test.
+ */
+Cypress.Commands.add('getCartItemsByApi', () => {
+  return cy.getCookie('tokenp_').then((cookie) => {
+    if (!cookie) {
+      throw new Error('getCartItemsByApi requires an active session — call cy.loginByApi first.');
+    }
+    return cy
+      .request({
+        method: 'POST',
+        url: `${apiUrl()}/viewcart`,
+        body: { cookie: cookie.value, flag: true },
+      })
+      .then((response) => {
+        failOnApiError(response.body, 'getCartItemsByApi');
+        return response.body.Items as CartItem[];
+      });
   });
 });
 
@@ -66,5 +105,7 @@ Cypress.Commands.add('clearCartByApi', (username: string) => {
     method: 'POST',
     url: `${apiUrl()}/deletecart`,
     body: { cookie: username },
+  }).then((response) => {
+    failOnApiError(response.body, `clearCartByApi("${username}")`);
   });
 });

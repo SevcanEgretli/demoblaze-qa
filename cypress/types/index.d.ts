@@ -19,6 +19,12 @@ declare namespace Cypress {
      */
     addProductToCartByApi(productId: number): Chainable<void>;
 
+    /**
+     * Returns the authenticated user's cart items via /viewcart.
+     * Requires loginByApi to have run first in the same test.
+     */
+    getCartItemsByApi(): Chainable<import('./models').CartItem[]>;
+
     /** Clears the given user's cart via the API (keyed by username). */
     clearCartByApi(username: string): Chainable<void>;
   }

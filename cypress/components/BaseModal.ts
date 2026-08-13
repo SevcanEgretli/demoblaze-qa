@@ -6,7 +6,6 @@
 export default abstract class BaseModal {
   protected constructor(private readonly rootSelector: string) {}
 
-  // --- Shared locators ------------------------------------------------------
   protected get root() {
     return cy.get(this.rootSelector);
   }
@@ -15,11 +14,12 @@ export default abstract class BaseModal {
     return this.root.contains('button', 'Close');
   }
 
-  // --- Shared actions -------------------------------------------------------
   /**
    * Waits until the modal is fully shown. Bootstrap moves focus to the modal
    * root when its fade-in transition completes — typing before that loses
    * keystrokes to the focus switch, so form actions must call this first.
+   * (document.activeElement updates even in an unfocused/headless browser,
+   * so this signal is safe in CI.)
    */
   waitUntilReady(): void {
     this.root.should('be.visible').and('have.focus');
@@ -29,7 +29,6 @@ export default abstract class BaseModal {
     this.closeButton.click();
   }
 
-  // --- State readers ----------------------------------------------------------
   getRoot(): Cypress.Chainable<JQuery<HTMLElement>> {
     return this.root;
   }

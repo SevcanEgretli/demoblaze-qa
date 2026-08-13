@@ -9,20 +9,18 @@ class LoginModal extends BaseModal {
     super('#logInModal');
   }
 
-  // --- Locators -----------------------------------------------------------
   private get usernameInput() {
-    return cy.get('#loginusername');
+    return this.root.find('#loginusername');
   }
 
   private get passwordInput() {
-    return cy.get('#loginpassword');
+    return this.root.find('#loginpassword');
   }
 
   private get logInButton() {
     return this.root.contains('button', 'Log in');
   }
 
-  // --- Actions ------------------------------------------------------------
   /** Types into the username/password fields without submitting the form. */
   fillCredentials(username: string, password: string): void {
     this.waitUntilReady();
@@ -40,7 +38,6 @@ class LoginModal extends BaseModal {
     this.logInButton.click();
   }
 
-  // --- State readers (specs assert on these) -------------------------------
   getUsernameInput(): Cypress.Chainable<JQuery<HTMLElement>> {
     return this.usernameInput;
   }

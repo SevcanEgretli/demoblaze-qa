@@ -84,9 +84,8 @@ describe('Login (UI)', () => {
     NavBar.openLogInModal();
     LoginModal.getRoot().should('be.visible');
 
-    // Known bug: the form is not reset on Close, so the previous input is
-    // still there on reopen. Real apps should clear sensitive fields like
-    // this; we accept it here only because demoblaze is a public demo site.
+    // Known demoblaze bug: the form is not reset on Close, so the previous
+    // input is still there on reopen — this test pins the current behavior.
     LoginModal.getUsernameInput().should('have.value', randomUsername);
     LoginModal.getPasswordInput().should('have.value', randomPassword);
   });

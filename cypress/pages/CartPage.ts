@@ -7,7 +7,6 @@ import BasePage from './BasePage';
 class CartPage extends BasePage {
   protected readonly path = '/cart.html';
 
-  // --- Locators -----------------------------------------------------------
   private get cartRows() {
     return cy.get('#tbodyid > tr');
   }
@@ -20,7 +19,6 @@ class CartPage extends BasePage {
     return cy.contains('button', 'Place Order');
   }
 
-  // --- Actions ------------------------------------------------------------
   placeOrder(): void {
     this.placeOrderButton.click();
   }
@@ -29,7 +27,6 @@ class CartPage extends BasePage {
     this.cartRows.contains('tr', productName).contains('Delete').click();
   }
 
-  // --- State readers (specs assert on these) ------------------------------
   getCartRows(): Cypress.Chainable<JQuery<HTMLElement>> {
     return this.cartRows;
   }

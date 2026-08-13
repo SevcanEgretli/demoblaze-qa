@@ -32,9 +32,12 @@ describe('Checkout', () => {
 
   beforeEach(() => {
     cy.loginByApi(username, password);
+    // Clean before use: an interrupted earlier run may have left items behind.
+    cy.clearCartByApi(username);
   });
 
   afterEach(() => {
+    // Courtesy cleanup so the shared demo account isn't left with test state.
     cy.clearCartByApi(username);
   });
 
@@ -77,15 +80,7 @@ describe('Checkout', () => {
 
     // The cart must actually be empty afterward — this also exercises the
     // /deletecart-by-username contract documented in commands.ts.
-    cy.getCookie('tokenp_').then((cookie) => {
-      cy.request({
-        method: 'POST',
-        url: `${Cypress.env('apiUrl')}/viewcart`,
-        body: { cookie: cookie!.value, flag: true },
-      }).then((response) => {
-        expect(response.body.Items).to.deep.equal([]);
-      });
-    });
+    cy.getCartItemsByApi().should('deep.equal', []);
   });
 
   it('shows a confirmation amount matching the sum of multiple laptops', () => {

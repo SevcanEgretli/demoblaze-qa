@@ -23,9 +23,12 @@ describe('Cart', () => {
 
   beforeEach(() => {
     cy.loginByApi(username, password);
+    // Clean before use: an interrupted earlier run may have left items behind.
+    cy.clearCartByApi(username);
   });
 
   afterEach(() => {
+    // Courtesy cleanup so the shared demo account isn't left with test state.
     cy.clearCartByApi(username);
   });
 

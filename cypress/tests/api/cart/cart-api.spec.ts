@@ -1,7 +1,10 @@
+import type { CartItem, Product } from '../../../types/models';
+
 /**
  * API-level tests for the cart lifecycle: /addtocart, /viewcart,
  * /deleteitem, /deletecart. Exercises the contract directly, independent
- * of any page rendering.
+ * of any page rendering — requests are built raw on purpose rather than
+ * through the higher-level custom commands.
  *
  * Cart identity quirk (verified manually against the live API): items are
  * stored keyed by USERNAME (/viewcart returns each item's "cookie" field as
@@ -15,20 +18,36 @@ describe('Cart API', () => {
   const apiUrl = Cypress.env('apiUrl') as string;
   const username = Cypress.env('USERNAME') as string;
   const password = Cypress.env('PASSWORD') as string;
-  const laptopId = 8;
-  const otherLaptopId = 9;
+  let laptop: Product;
+  let otherLaptop: Product;
 
   let token: string;
 
   const uniqueCartEntryId = () => `cart-api-${Date.now()}-${Cypress._.random(0, 1e6)}`;
 
+  const addToCart = (entryId: string, productId: number) =>
+    cy.request({
+      method: 'POST',
+      url: `${apiUrl}/addtocart`,
+      body: { id: entryId, cookie: token, prod_id: productId, flag: true },
+    });
+
   const viewCart = () =>
     cy.request({ method: 'POST', url: `${apiUrl}/viewcart`, body: { cookie: token, flag: true } });
+
+  before(() => {
+    cy.fixture('products').then((fixture: { laptops: Record<string, Product> }) => {
+      laptop = fixture.laptops.primary;
+      otherLaptop = fixture.laptops.secondary;
+    });
+  });
 
   beforeEach(() => {
     cy.loginByApi(username, password).then((issuedToken) => {
       token = issuedToken;
     });
+    // Clean before use: an interrupted earlier run may have left items behind.
+    cy.clearCartByApi(username);
   });
 
   afterEach(() => {
@@ -39,11 +58,7 @@ describe('Cart API', () => {
   it('adds a product to the cart and it appears in /viewcart', () => {
     const entryId = uniqueCartEntryId();
 
-    cy.request({
-      method: 'POST',
-      url: `${apiUrl}/addtocart`,
-      body: { id: entryId, cookie: token, prod_id: laptopId, flag: true },
-    }).then((response) => {
+    addToCart(entryId, laptop.id).then((response) => {
       // A successful /addtocart responds 200 with an empty body — there is
       // no success payload to assert on beyond the status; the real proof
       // of success is the item showing up in /viewcart below.
@@ -51,10 +66,10 @@ describe('Cart API', () => {
     });
 
     viewCart().then((response) => {
-      const items = response.body.Items as Array<{ id: string; prod_id: number; cookie: string }>;
+      const items = response.body.Items as CartItem[];
       const added = items.find((item) => item.id === entryId);
       expect(added, 'added item present in cart').to.exist;
-      expect(added!.prod_id).to.equal(laptopId);
+      expect(added!.prod_id).to.equal(laptop.id);
       expect(added!.cookie).to.equal(username);
     });
   });
@@ -63,7 +78,7 @@ describe('Cart API', () => {
     cy.request({
       method: 'POST',
       url: `${apiUrl}/addtocart`,
-      body: { id: uniqueCartEntryId(), cookie: 'not-a-real-token', prod_id: laptopId, flag: true },
+      body: { id: uniqueCartEntryId(), cookie: 'not-a-real-token', prod_id: laptop.id, flag: true },
     }).then((response) => {
       expect(response.status).to.equal(200);
       expect(response.body).to.deep.equal({ errorMessage: 'Bad parameter, token malformed.' });
@@ -85,21 +100,13 @@ describe('Cart API', () => {
     const keepId = uniqueCartEntryId();
     const removeId = uniqueCartEntryId();
 
-    cy.request({
-      method: 'POST',
-      url: `${apiUrl}/addtocart`,
-      body: { id: keepId, cookie: token, prod_id: laptopId, flag: true },
-    });
-    cy.request({
-      method: 'POST',
-      url: `${apiUrl}/addtocart`,
-      body: { id: removeId, cookie: token, prod_id: otherLaptopId, flag: true },
-    });
+    addToCart(keepId, laptop.id);
+    addToCart(removeId, otherLaptop.id);
 
     cy.request({ method: 'POST', url: `${apiUrl}/deleteitem`, body: { id: removeId } });
 
     viewCart().then((response) => {
-      const ids = (response.body.Items as Array<{ id: string }>).map((item) => item.id);
+      const ids = (response.body.Items as CartItem[]).map((item) => item.id);
       expect(ids).to.include(keepId);
       expect(ids).to.not.include(removeId);
     });
@@ -109,21 +116,13 @@ describe('Cart API', () => {
     const firstEntryId = uniqueCartEntryId();
     const secondEntryId = uniqueCartEntryId();
 
-    cy.request({
-      method: 'POST',
-      url: `${apiUrl}/addtocart`,
-      body: { id: firstEntryId, cookie: token, prod_id: laptopId, flag: true },
-    });
-    cy.request({
-      method: 'POST',
-      url: `${apiUrl}/addtocart`,
-      body: { id: secondEntryId, cookie: token, prod_id: otherLaptopId, flag: true },
-    });
+    addToCart(firstEntryId, laptop.id);
+    addToCart(secondEntryId, otherLaptop.id);
 
     viewCart().then((response) => {
-      const items = response.body.Items as Array<{ id: string; prod_id: number }>;
-      expect(items.find((item) => item.id === firstEntryId)?.prod_id).to.equal(laptopId);
-      expect(items.find((item) => item.id === secondEntryId)?.prod_id).to.equal(otherLaptopId);
+      const items = response.body.Items as CartItem[];
+      expect(items.find((item) => item.id === firstEntryId)?.prod_id).to.equal(laptop.id);
+      expect(items.find((item) => item.id === secondEntryId)?.prod_id).to.equal(otherLaptop.id);
     });
   });
 
@@ -136,26 +135,18 @@ describe('Cart API', () => {
     const entryId = uniqueCartEntryId();
     const nonExistentProductId = 999999;
 
-    cy.request({
-      method: 'POST',
-      url: `${apiUrl}/addtocart`,
-      body: { id: entryId, cookie: token, prod_id: nonExistentProductId, flag: true },
-    }).then((response) => {
+    addToCart(entryId, nonExistentProductId).then((response) => {
       expect(response.status).to.equal(200);
     });
 
     viewCart().then((response) => {
-      const items = response.body.Items as Array<{ id: string; prod_id: number }>;
+      const items = response.body.Items as CartItem[];
       expect(items.find((item) => item.id === entryId)?.prod_id).to.equal(nonExistentProductId);
     });
   });
 
   it('clears the entire cart via /deletecart', () => {
-    cy.request({
-      method: 'POST',
-      url: `${apiUrl}/addtocart`,
-      body: { id: uniqueCartEntryId(), cookie: token, prod_id: laptopId, flag: true },
-    });
+    addToCart(uniqueCartEntryId(), laptop.id);
 
     cy.request({ method: 'POST', url: `${apiUrl}/deletecart`, body: { cookie: username } }).then(
       (response) => {

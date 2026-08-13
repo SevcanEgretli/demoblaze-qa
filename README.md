@@ -162,10 +162,12 @@ purchase path above.
   `.should(...)` for DOM state. `cy.wait(<ms>)` is banned and enforced by ESLint
   (`cypress/no-unnecessary-waiting`), because fixed sleeps are either too slow (wasted CI
   time) or too fast (flaky) — waiting on the actual signal is both faster and reliable.
-- **Tests clean up after themselves** — every spec that adds to the cart clears it in
-  `afterEach` via `cy.clearCartByApi`, so specs stay independent and repeatable in any order
-  or in isolation, and don't leave stale cart state behind on the shared demo account.
-  See [Known risks](#known-risks) for what is and isn't cleaned up.
+- **Tests start from a clean cart and tidy up after themselves** — every cart-touching
+  spec clears the shared account's cart via `cy.clearCartByApi` in `beforeEach`
+  (clean-before-use: an interrupted earlier run can't poison the next one) and again in
+  `afterEach` as a courtesy to the shared demo account. Specs stay independent and
+  repeatable in any order or in isolation. See [Known risks](#known-risks) for what is
+  and isn't cleaned up.
 - **Retries are a safety net, not a fix** — `cypress.config.ts` retries a failing test up to
   twice in `runMode` (`retries.runMode: 2`) to absorb infrastructure-level flake (a slow
   public demo server), not to paper over real bugs; a test that only passes on retry gets
@@ -178,7 +180,7 @@ purchase path above.
   time instead of surfacing as a confusing runtime failure mid-test.
 
 Full contribution rules (selector priority, when to add a custom command vs. a page-object
-method, etc.) are documented in [`skills/SKILLS.md`](skills/SKILLS.md).
+method, etc.) are documented in [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md).
 
 ## 6. Project structure
 
@@ -201,18 +203,16 @@ demoblaze-qa/
 │   │   ├── LoginModal.ts         # Log-in form (extends BaseModal)
 │   │   └── CheckoutModal.ts      # Order form + confirmation (extends BaseModal)
 │   ├── fixtures/                 # Static test data (JSON)
-│   ├── factories/                # Dynamic test-data builders — to be defined
 │   ├── support/
 │   │   ├── commands.ts           # Custom commands (cy.loginByApi etc.)
 │   │   └── e2e.ts                # Global setup, loaded before every spec
 │   ├── utils/
-│   │   ├── dataGenerator.ts      # Unique-user generator (no duplicate sign-ups)
 │   │   └── encoding.ts           # Password base64 encoding (matches demoblaze's UI)
 │   └── types/
 │       ├── index.d.ts            # Ambient types for custom commands
 │       └── models.ts             # Shared data models (UserCredentials, CheckoutInfo)
-├── skills/
-│   └── SKILLS.md                 # Project conventions / how-to guides
+├── docs/
+│   └── CONTRIBUTING.md           # Project conventions / contribution rules
 ├── .github/workflows/ci.yml      # Lint + typecheck + Cypress run on push/PR
 ├── cypress.config.ts             # baseUrl, spec pattern, retries, reporter
 ├── cypress.env.example.json      # Template for local credentials (copy to cypress.env.json)
@@ -229,6 +229,8 @@ demoblaze-qa/
 Cypress suite (needs `CYPRESS_USERNAME` / `CYPRESS_PASSWORD` repo secrets — a registered
 demoblaze account, mapped from `cypress.env.json`'s `USERNAME`/`PASSWORD` keys). The
 mochawesome report and, on failure, screenshots are uploaded as workflow artifacts.
+A workflow-level `concurrency` group queues overlapping runs, because all runs share one
+demoblaze account (see [Known risks](#known-risks)).
 
 ## Known risks
 
@@ -240,6 +242,6 @@ This suite runs against the real `demoblaze.com`, not a sandbox the team control
   (especially concurrent ones) risk slow responses or throttling; keep CI on a single
   sequential job rather than fanning out in parallel.
 - **Cart state is cleaned up, account state is not** — every spec that adds to the cart
-  clears it via `cy.clearCartByApi` in `afterEach`. Login tests reuse one fixed account
+  clears it via `cy.clearCartByApi` in `beforeEach` and `afterEach`. Login tests reuse one fixed account
   (`CYPRESS_USERNAME`/`PASSWORD`) rather than registering new ones, so this suite does not
   accumulate throwaway user accounts on demoblaze.

@@ -1,4 +1,4 @@
-# SKILLS.md — Test Automation Best Practices
+# Contributing — Test Automation Best Practices
 
 Rules for keeping this suite **extendable and maintainable**. Every contribution
 (human or AI-assisted) must follow them. When reviewing a PR, check against this list.
@@ -26,7 +26,9 @@ Rules for keeping this suite **extendable and maintainable**. Every contribution
 - **Flows**: a multi-step flow needed by more than one spec becomes a custom command
   (rule 3) or a page-object method — never copy-pasted between specs.
 - **Data**: static datasets live once in `cypress/fixtures/`; generated data comes from
-  one factory in `cypress/factories/`. No inline magic strings repeated across specs.
+  one builder function (create `cypress/factories/` when dynamic data is first needed —
+  all current data is static, so the folder doesn't exist yet). No inline magic strings
+  repeated across specs.
 - **Config**: timeouts, baseUrl, viewport are set once in `cypress.config.ts` — specs
   never override them ad hoc.
 
@@ -103,8 +105,9 @@ Rules for keeping this suite **extendable and maintainable**. Every contribution
 ## 10. Handle test data deliberately
 
 - **Fixtures** (`cypress/fixtures/*.json`) = static, reusable, version-controlled data.
-- **Factories** (`cypress/factories/`) = dynamic builders returning valid objects by
-  default with per-test overrides: `buildUser({ password: 'weak' })`.
+- **Factories** (`cypress/factories/`, created on first need) = dynamic builders
+  returning valid objects by default with per-test overrides:
+  `buildUser({ password: 'weak' })`.
 - Tests should state only the data that **matters to the scenario**; factories fill
   in the rest. This keeps tests short and resilient to model changes.
 

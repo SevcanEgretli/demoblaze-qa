@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [main]
 
+# The suite drives ONE shared demoblaze account (the cart is keyed by
+# username), so two workflow runs overlapping would corrupt each other's
+# cart state — queue them instead of running in parallel.
+concurrency:
+  group: demoblaze-shared-account
+  cancel-in-progress: false
+
 jobs:
   lint-and-typecheck:
     runs-on: ubuntu-latest
