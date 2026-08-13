@@ -105,6 +105,51 @@ describe('Cart API', () => {
     });
   });
 
+  it('allows multiple products to be added to the cart', () => {
+    const firstEntryId = uniqueCartEntryId();
+    const secondEntryId = uniqueCartEntryId();
+
+    cy.request({
+      method: 'POST',
+      url: `${apiUrl}/addtocart`,
+      body: { id: firstEntryId, cookie: token, prod_id: laptopId, flag: true },
+    });
+    cy.request({
+      method: 'POST',
+      url: `${apiUrl}/addtocart`,
+      body: { id: secondEntryId, cookie: token, prod_id: otherLaptopId, flag: true },
+    });
+
+    viewCart().then((response) => {
+      const items = response.body.Items as Array<{ id: string; prod_id: number }>;
+      expect(items.find((item) => item.id === firstEntryId)?.prod_id).to.equal(laptopId);
+      expect(items.find((item) => item.id === secondEntryId)?.prod_id).to.equal(otherLaptopId);
+    });
+  });
+
+  // NOTE: verified manually against the live API — /addtocart does NOT
+  // validate that prod_id refers to a real product. It responds 200 and
+  // silently stores whatever id is sent, with no errorMessage. There is no
+  // rejection to test here; this documents the actual (surprising) contract
+  // instead of asserting behavior the API doesn't have.
+  it('accepts addtocart for a product id that does not exist, without validation', () => {
+    const entryId = uniqueCartEntryId();
+    const nonExistentProductId = 999999;
+
+    cy.request({
+      method: 'POST',
+      url: `${apiUrl}/addtocart`,
+      body: { id: entryId, cookie: token, prod_id: nonExistentProductId, flag: true },
+    }).then((response) => {
+      expect(response.status).to.equal(200);
+    });
+
+    viewCart().then((response) => {
+      const items = response.body.Items as Array<{ id: string; prod_id: number }>;
+      expect(items.find((item) => item.id === entryId)?.prod_id).to.equal(nonExistentProductId);
+    });
+  });
+
   it('clears the entire cart via /deletecart', () => {
     cy.request({
       method: 'POST',

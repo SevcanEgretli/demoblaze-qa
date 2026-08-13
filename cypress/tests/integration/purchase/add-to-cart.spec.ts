@@ -1,12 +1,6 @@
 import { ProductPage } from '../../../pages';
 import type { Product } from '../../../types/models';
 
-/**
- * "Add to cart" from the product detail page. Starts directly on the
- * product page (bypassing home-page selection, already covered by
- * product-selection.spec.ts) so this spec isolates only the add-to-cart
- * behavior itself.
- */
 describe('Add to Cart', () => {
   const apiUrl = Cypress.env('apiUrl') as string;
   const username = Cypress.env('USERNAME') as string;
@@ -36,9 +30,6 @@ describe('Add to Cart', () => {
     ProductPage.addToCart();
 
     cy.wait('@addToCart').its('response.statusCode').should('equal', 200);
-    // Logged-in users see "Product added." (with a trailing period) —
-    // guests see "Product added" without one, so this text also confirms
-    // the request carried a valid session.
     cy.get('@alert').should('have.been.calledOnceWith', 'Product added.');
 
     cy.getCookie('tokenp_').then((cookie) => {

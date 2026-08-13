@@ -5,7 +5,7 @@ import type { Product } from '../../../types/models';
  * Cart page behavior. Cart state is seeded via the API (cy.loginByApi +
  * cy.addProductToCartByApi) rather than clicking through product selection
  * and "Add to cart" again — those flows are already covered by
- * product-selection.spec.ts and add-to-cart.spec.ts. This spec is only
+ *  add-to-cart.spec.ts. This spec is only
  * about what the cart page itself does with that state.
  */
 describe('Cart', () => {

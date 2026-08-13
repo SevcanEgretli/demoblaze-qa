@@ -1,6 +1,6 @@
 /**
- * Base class for demoblaze's Bootstrap modals (sign up, log in, place order).
- * Centralizes the shared modal shell — root element, title, close/dismiss —
+ * Base class for demoblaze's Bootstrap modals (log in, place order).
+ * Centralizes the shared modal shell — root element, close —
  * so each concrete modal only defines its own form fields and submit action.
  */
 export default abstract class BaseModal {
@@ -11,16 +11,8 @@ export default abstract class BaseModal {
     return cy.get(this.rootSelector);
   }
 
-  protected get title() {
-    return this.root.find('.modal-title');
-  }
-
   private get closeButton() {
     return this.root.contains('button', 'Close');
-  }
-
-  private get dismissX() {
-    return this.root.find('button.close');
   }
 
   // --- Shared actions -------------------------------------------------------
@@ -37,16 +29,8 @@ export default abstract class BaseModal {
     this.closeButton.click();
   }
 
-  dismiss(): void {
-    this.dismissX.click();
-  }
-
   // --- State readers ----------------------------------------------------------
   getRoot(): Cypress.Chainable<JQuery<HTMLElement>> {
     return this.root;
-  }
-
-  getTitle(): Cypress.Chainable<JQuery<HTMLElement>> {
-    return this.title;
   }
 }

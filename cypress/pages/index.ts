@@ -10,6 +10,5 @@ export { default as CartPage } from './CartPage';
 
 // Shared components
 export { default as NavBar } from '../components/NavBar';
-export { default as SignUpModal } from '../components/SignUpModal';
 export { default as LoginModal } from '../components/LoginModal';
 export { default as CheckoutModal } from '../components/CheckoutModal';

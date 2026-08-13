@@ -5,14 +5,6 @@
  */
 class NavBar {
   // --- Locators -----------------------------------------------------------
-  private get homeLink() {
-    return cy.get('.navbar-nav').contains('a', 'Home');
-  }
-
-  private get signUpLink() {
-    return cy.get('#signin2');
-  }
-
   private get logInLink() {
     return cy.get('#login2');
   }
@@ -30,14 +22,6 @@ class NavBar {
   }
 
   // --- Actions ------------------------------------------------------------
-  goHome(): void {
-    this.homeLink.click();
-  }
-
-  openSignUpModal(): void {
-    this.signUpLink.click();
-  }
-
   openLogInModal(): void {
     this.logInLink.click();
   }

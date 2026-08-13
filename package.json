@@ -13,7 +13,8 @@
     "report": "start \"\" \"cypress\\reports\\html\\index.html\"",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
-    "format": "prettier --write \"cypress/**/*.ts\""
+    "format": "prettier --write \"cypress/**/*.ts\"",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^7.18.0",
