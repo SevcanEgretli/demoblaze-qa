@@ -38,7 +38,7 @@ describe('Checkout', () => {
 
   afterEach(() => {
     // Courtesy cleanup so the shared demo account isn't left with test state.
-    cy.clearCartByApi(username);
+    cy.clearCartByApi(username, { bestEffort: true });
   });
 
   it('shows a validation alert when submitting without name and card', () => {

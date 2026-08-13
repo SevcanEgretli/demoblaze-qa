@@ -52,7 +52,7 @@ describe('Cart API', () => {
 
   afterEach(() => {
     // Keep the shared demo account's cart clean between test runs.
-    cy.clearCartByApi(username);
+    cy.clearCartByApi(username, { bestEffort: true });
   });
 
   it('adds a product to the cart and it appears in /viewcart', () => {

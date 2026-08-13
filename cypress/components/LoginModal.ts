@@ -32,12 +32,14 @@ class LoginModal extends BaseModal {
     this.logInButton.click();
   }
 
-  getUsernameInput(): Cypress.Chainable<JQuery<HTMLElement>> {
-    return this.usernameInput;
+  // Value readers instead of raw input handles: specs only need the entered
+  // text, so the element itself stays encapsulated here.
+  getUsernameValue(): Cypress.Chainable<string> {
+    return this.usernameInput.invoke('val') as Cypress.Chainable<string>;
   }
 
-  getPasswordInput(): Cypress.Chainable<JQuery<HTMLElement>> {
-    return this.passwordInput;
+  getPasswordValue(): Cypress.Chainable<string> {
+    return this.passwordInput.invoke('val') as Cypress.Chainable<string>;
   }
 }
 

@@ -9,35 +9,6 @@
       "id": 9,
       "title": "Sony vaio i7",
       "price": 790
-    },
-    "tertiary": {
-      "id": 15,
-      "title": "MacBook Pro",
-      "price": 1100
-    }
-  },
-  "monitors": {
-    "primary": {
-      "id": 10,
-      "title": "Apple monitor 24",
-      "price": 400
-    },
-    "secondary": {
-      "id": 14,
-      "title": "ASUS Full HD",
-      "price": 230
-    }
-  },
-  "phones": {
-    "primary": {
-      "id": 1,
-      "title": "Samsung galaxy s6",
-      "price": 360
-    },
-    "secondary": {
-      "id": 2,
-      "title": "Nokia lumia 1520",
-      "price": 820
     }
   }
 }

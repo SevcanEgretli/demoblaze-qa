@@ -85,8 +85,8 @@ describe('Login (UI)', () => {
 
     // Known demoblaze bug: the form is not reset on Close, so the previous
     // input is still there on reopen — this test pins the current behavior.
-    LoginModal.getUsernameInput().should('have.value', randomUsername);
-    LoginModal.getPasswordInput().should('have.value', randomPassword);
+    LoginModal.getUsernameValue().should('equal', randomUsername);
+    LoginModal.getPasswordValue().should('equal', randomPassword);
   });
 
   it('logs out and returns the navbar to the guest state', () => {

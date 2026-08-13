@@ -25,7 +25,10 @@ declare namespace Cypress {
      */
     getCartItemsByApi(): Chainable<import('./models').CartItem[]>;
 
-    /** Clears the given user's cart via the API (keyed by username). */
-    clearCartByApi(username: string): Chainable<void>;
+    /**
+     * Clears the given user's cart via the API (keyed by username).
+     * `bestEffort: true` ignores failures — afterEach courtesy cleanup only.
+     */
+    clearCartByApi(username: string, options?: { bestEffort?: boolean }): Chainable<void>;
   }
 }

@@ -20,7 +20,7 @@ describe('Add to Cart', () => {
 
   afterEach(() => {
     // Courtesy cleanup so the shared demo account isn't left with test state.
-    cy.clearCartByApi(username);
+    cy.clearCartByApi(username, { bestEffort: true });
   });
 
   it('adds the product to the cart and confirms with an alert', () => {

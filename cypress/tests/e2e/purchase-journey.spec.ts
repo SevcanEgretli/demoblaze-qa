@@ -4,9 +4,16 @@ import type { CheckoutInfo, Product } from '../../types/models';
 /**
  * Full purchase journey, driven entirely through the UI — no API shortcuts.
  * Log in, pick a laptop, add it to the cart, and complete checkout.
- * Each step already has isolated coverage in integration/ (auth/login,
- * purchase/add-to-cart, purchase/cart, purchase/checkout); this spec's only
- * job is to prove the steps chain together correctly end to end.
+ *
+ * Smoke test by design: each step keeps only ONE milestone assertion proving
+ * the chain advanced; step-level detail (alert texts, totals, status codes)
+ * is asserted in the integration/ specs instead, so a detail regression
+ * breaks one integration spec — not this journey too.
+ *
+ * Unique signal vs. integration/: those specs seed state via the API
+ * (cy.loginByApi + cy.addProductToCartByApi), so only this spec proves the
+ * UI-login session carries through UI add-to-cart and checkout, and only
+ * this spec covers picking a product from the home-page grid.
  */
 describe('Purchase Journey (E2E)', () => {
   const username = Cypress.env('USERNAME') as string;
@@ -33,7 +40,7 @@ describe('Purchase Journey (E2E)', () => {
     // Safety net only: a successful purchase already empties the cart itself
     // (asserted below via the /deletecart wait), this just guards against a
     // failed run leaving state behind for the next one.
-    cy.clearCartByApi(username);
+    cy.clearCartByApi(username, { bestEffort: true });
   });
 
   it('logs in, buys a laptop, and confirms the order', () => {
@@ -42,24 +49,18 @@ describe('Purchase Journey (E2E)', () => {
     NavBar.openLogInModal();
     LoginModal.logIn(username, password);
 
-    cy.wait('@login').its('response.statusCode').should('equal', 200);
+    cy.wait('@login');
     NavBar.getLoggedInUserLabel().should('be.visible').and('contain.text', `Welcome ${username}`);
 
     HomePage.selectProduct(laptop.title);
     ProductPage.getProductName().should('be.visible').and('contain.text', laptop.title);
-    ProductPage.getProductPrice().should('contain.text', `$${laptop.price}`);
 
-    const alertStub = cy.stub().as('alert');
-    cy.on('window:alert', alertStub);
     cy.intercept('POST', '**/addtocart').as('addToCart');
     ProductPage.addToCart();
-
-    cy.wait('@addToCart').its('response.statusCode').should('equal', 200);
-    cy.get('@alert').should('have.been.calledOnceWith', 'Product added.');
+    cy.wait('@addToCart');
 
     NavBar.goToCart();
     CartPage.getCartRows().should('have.length', 1).and('contain.text', laptop.title);
-    CartPage.getTotalPrice().should('have.text', String(laptop.price));
 
     CartPage.placeOrder();
     CheckoutModal.fillOrderForm(order);
@@ -71,8 +72,7 @@ describe('Purchase Journey (E2E)', () => {
     CheckoutModal.getConfirmationDialog()
       .should('be.visible')
       .and('contain.text', 'Thank you for your purchase!')
-      .and('contain.text', `Amount: ${laptop.price} USD`)
-      .and('contain.text', order.name);
+      .and('contain.text', `Amount: ${laptop.price} USD`);
 
     CheckoutModal.confirmPurchase();
     cy.url().should('include', 'index.html');

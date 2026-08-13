@@ -133,12 +133,6 @@ concentrated here rather than spread thin across every page:
   smoke test that the pieces work together, separate from the more granular
   integration-level specs that test each step in isolation.
 
-Signup and category/pagination browsing were deliberately **left out of scope**: this suite
-runs against demoblaze's shared public demo instance (see [Known risks](#known-risks)), and
-automating account creation there would accumulate throwaway accounts on infrastructure we
-don't own, for a flow (browsing/signup) that carries far less business risk than the
-purchase path above.
-
 ### How the tests are designed, and why
 
 - **Page Object Model** — specs contain no CSS selectors; every locator lives in
@@ -148,8 +142,8 @@ purchase path above.
   touches that element.
 - **Shared UI factored into components** — the navbar and Bootstrap modals appear on
   multiple pages, so they're modeled once (`components/NavBar.ts`, `components/BaseModal.ts`
-  and its subclasses) and composed into every page object, instead of being redefined per
-  page.
+  and its subclasses) as shared singletons re-exported through `pages/index.ts`, instead of
+  being redefined per page.
 - **API calls to set up state, UI to test behavior** — custom commands
   (`cy.loginByApi`, `cy.addProductToCartByApi`, `cy.clearCartByApi` in
   `support/commands.ts`) seed preconditions (an authenticated session, a pre-filled cart)
@@ -165,13 +159,16 @@ purchase path above.
 - **Tests start from a clean cart and tidy up after themselves** — every cart-touching
   spec clears the shared account's cart via `cy.clearCartByApi` in `beforeEach`
   (clean-before-use: an interrupted earlier run can't poison the next one) and again in
-  `afterEach` as a courtesy to the shared demo account. Specs stay independent and
-  repeatable in any order or in isolation. See [Known risks](#known-risks) for what is
-  and isn't cleaned up.
+  `afterEach` as a best-effort courtesy to the shared demo account (courtesy-cleanup
+  failures are ignored so they can't fail a passing test; the strict `beforeEach` clean is
+  the correctness guarantee). Specs stay independent and repeatable in any order or in
+  isolation. See [Known risks](#known-risks) for what is and isn't cleaned up.
 - **Retries are a safety net, not a fix** — `cypress.config.ts` retries a failing test up to
   twice in `runMode` (`retries.runMode: 2`) to absorb infrastructure-level flake (a slow
   public demo server), not to paper over real bugs; a test that only passes on retry gets
-  investigated and fixed, not left as is.
+  investigated and fixed, not left as is. To keep that observable rather than aspirational,
+  the config's `after:spec` hook flags every retried-but-passing test — as a terminal
+  warning locally, and as a `::warning` annotation on the workflow run in GitHub Actions.
 - **`id`-first selector strategy, XPath banned** — selectors prefer stable `id` attributes
   (`#login2`), falling back to class/role only where no id exists, and never XPath or
   layout-based selectors (`nth-child`), because those break on any DOM reshuffle.
@@ -192,7 +189,7 @@ demoblaze-qa/
 │   │   ├── integration/          # Component/flow-level tests (UI + stubbed network)
 │   │   └── api/                  # API tests via cy.request (no browser UI)
 │   ├── pages/                    # Page Objects — locators + actions ONLY, no assertions
-│   │   ├── BasePage.ts           # Navigation + composes NavBar
+│   │   ├── BasePage.ts           # Shared page navigation (visit by path)
 │   │   ├── HomePage.ts           # Product grid
 │   │   ├── ProductPage.ts        # Product detail + Add to cart
 │   │   ├── CartPage.ts           # Cart rows, total, Place Order
@@ -231,6 +228,17 @@ demoblaze account, mapped from `cypress.env.json`'s `USERNAME`/`PASSWORD` keys).
 mochawesome report and, on failure, screenshots are uploaded as workflow artifacts.
 A workflow-level `concurrency` group queues overlapping runs, because all runs share one
 demoblaze account (see [Known risks](#known-risks)).
+
+CI also keeps a **cross-run test history**: every run appends one JSON line per test
+(timestamp, spec, test name, state, attempt count, duration) to
+`cypress/reports/history.jsonl`, persisted between runs via the Actions cache and uploaded
+as the `test-history` artifact (90-day retention). Unlike the per-run mochawesome reports,
+this answers trend questions — "was this test slow three runs ago too?" — with a simple
+grep over one file:
+
+```bash
+grep '"test":"Cart > removes a product' history.jsonl   # one line per historical run
+```
 
 ## Known risks
 

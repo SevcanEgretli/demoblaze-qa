@@ -29,7 +29,7 @@ describe('Cart', () => {
 
   afterEach(() => {
     // Courtesy cleanup so the shared demo account isn't left with test state.
-    cy.clearCartByApi(username);
+    cy.clearCartByApi(username, { bestEffort: true });
   });
 
   it('shows the seeded product with its correct name and price', () => {
@@ -60,6 +60,10 @@ describe('Cart', () => {
     CartPage.visit();
     CartPage.getCartRows().should('have.length', 2);
 
+    // deleteItem() (cart.js) does a full location.reload() on success rather
+    // than calling /viewcart directly — the reload's own bootstrap is what
+    // fires the single /viewcart call this waits on, so the intercept must
+    // be registered before the click.
     cy.intercept('POST', '**/viewcart').as('viewCart');
     CartPage.deleteProduct(primary.title);
     cy.wait('@viewCart');

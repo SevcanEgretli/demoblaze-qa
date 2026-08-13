@@ -41,11 +41,38 @@ jobs:
 
       - run: npm ci
 
+      # Test history accumulates across runs: restore the newest previous
+      # snapshot (restore-keys prefix match), append this run's results via
+      # the after:spec hook in cypress.config.ts, then save under a fresh
+      # run-scoped key below.
+      - name: Restore test history
+        uses: actions/cache/restore@v4
+        with:
+          path: cypress/reports/history.jsonl
+          key: test-history-${{ github.run_id }}
+          restore-keys: |
+            test-history-
+
       - name: Run Cypress
         run: npm test
         env:
           CYPRESS_USERNAME: ${{ secrets.CYPRESS_USERNAME }}
           CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
+
+      - name: Save test history
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: cypress/reports/history.jsonl
+          key: test-history-${{ github.run_id }}
+
+      - name: Upload test history
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-history
+          path: cypress/reports/history.jsonl
+          retention-days: 90
 
       - name: Upload mochawesome report
         if: always()

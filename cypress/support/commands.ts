@@ -79,13 +79,21 @@ Cypress.Commands.add('getCartItemsByApi', () => {
  * NOTE: /deletecart keys the cart by USERNAME, not by token — confirmed via
  * /viewcart's "cookie" field, and matches the app's own cart.js behavior.
  * Intentional, not a bug.
+ *
+ * `bestEffort` is for afterEach courtesy cleanup only: failures are ignored
+ * so a transient API blip can't fail a test that already passed. The strict
+ * default stays the correctness guarantee for beforeEach clean-before-use.
  */
-Cypress.Commands.add('clearCartByApi', (username: string) => {
+Cypress.Commands.add('clearCartByApi', (username: string, options?: { bestEffort?: boolean }) => {
+  const bestEffort = options?.bestEffort ?? false;
   cy.request({
     method: 'POST',
     url: `${apiUrl()}/deletecart`,
     body: { cookie: username },
+    failOnStatusCode: !bestEffort,
   }).then((response) => {
-    failOnApiError(response.body, `clearCartByApi("${username}")`);
+    if (!bestEffort) {
+      failOnApiError(response.body, `clearCartByApi("${username}")`);
+    }
   });
 });

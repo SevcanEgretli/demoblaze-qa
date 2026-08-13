@@ -15,14 +15,21 @@ Rules for keeping this suite **extendable and maintainable**. Every contribution
 - **Page objects contain no assertions.** Assertions belong in specs, so a locator change
   never hides a behavioral expectation. Page objects *may* use `.should('be.visible')`
   purely as a wait before interacting (see rule 4).
+- **State readers are for behavior-level assertions only** — visibility, text, value,
+  count. Specs must not use a returned element to assert on structure (CSS classes,
+  attributes, DOM layout); those are implementation details of the page. If a scenario
+  needs a narrower fact, add a semantic reader to the page object (e.g.
+  `getUsernameValue()` returning the string) instead of poking the raw element, and keep
+  each reader's return type as narrow as its consumers actually need.
 - One file per page/component, exported as a singleton, re-exported from the barrel
   (`cypress/pages/index.ts`) so specs import from one place.
 
 ## 2. Don't duplicate anything
 
 - **Locators**: each element is defined in exactly one place. UI that appears on multiple
-  pages (navbar, modals) lives in `cypress/components/` and is composed into pages —
-  never re-declared per page (`BasePage` exposes `navBar`; modals extend `BaseModal`).
+  pages (navbar, modals) lives in `cypress/components/` as a shared singleton, re-exported
+  through the barrel (`cypress/pages/index.ts`) — never re-declared per page (specs import
+  `NavBar` directly; modals extend `BaseModal`).
 - **Flows**: a multi-step flow needed by more than one spec becomes a custom command
   (rule 3) or a page-object method — never copy-pasted between specs.
 - **Data**: static datasets live once in `cypress/fixtures/`; generated data comes from
@@ -82,6 +89,12 @@ Rules for keeping this suite **extendable and maintainable**. Every contribution
 - Every spec must pass **alone** (`--spec` on one file) and in **any order**. Never rely
   on state left behind by a previous test.
 - Set up preconditions in `beforeEach` (via custom commands), not in a prior `it()`.
+- Cart-touching specs clear the shared account's cart in **`beforeEach`**
+  (clean-before-use, so an interrupted prior run can't poison the next one) in addition
+  to an `afterEach` courtesy cleanup. The two have different contracts:
+  `beforeEach` cleanup is strict (a failure there is a real environment outage and must
+  fail loudly), `afterEach` cleanup calls `cy.clearCartByApi(username, { bestEffort: true })`
+  so a transient blip in courtesy cleanup never fails a test that already passed.
 - Data that must be unique per run (demoblaze usernames) comes from factories —
   a re-run must never fail because "user already exists".
 
@@ -120,6 +133,14 @@ Rules for keeping this suite **extendable and maintainable**. Every contribution
   real defects, and prefer scoping such handling to the specific spec that needs it.
 - Retries (`runMode: 2`) are a safety net for infrastructure flake, **not** a license
   to merge flaky tests. A test that needs retries to pass gets fixed or deleted.
+  This is enforced observably, not by good intentions: `cypress.config.ts` reports every
+  test that passed only on retry (`after:spec` hook) — as a terminal warning locally and
+  as a `::warning` annotation on the run in GitHub Actions. Treat those warnings as
+  action items, never as noise.
+- Per-test outcomes (state, attempts, duration) are also appended to
+  `cypress/reports/history.jsonl` on every run, and CI persists that file across runs —
+  when investigating a slow or flaky test, grep its name there first to see whether the
+  regression is new or a trend.
 
 ## 12. Keep the architecture boundaries clean
 
