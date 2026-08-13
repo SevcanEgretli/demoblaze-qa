@@ -1,8 +1,7 @@
 import { HomePage, NavBar, LoginModal } from '../../../pages';
 
 /**
- * UI login tests. All waits are signal-based: the login API call is
- * intercepted and awaited; alerts are captured via window:alert.
+ * UI login tests.
  */
 describe('Login (UI)', () => {
   const username = Cypress.env('USERNAME') as string;

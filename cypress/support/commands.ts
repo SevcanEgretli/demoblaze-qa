@@ -2,15 +2,12 @@ import { encodePassword } from '../utils/encoding';
 import type { CartItem } from '../types/models';
 
 /**
- * Custom commands. These wrap flows needed by MULTIPLE spec files across
- * different pages (auth, cart seeding) — see docs/CONTRIBUTING.md.
- * Types are declared in cypress/types/index.d.ts; keep both in sync.
+ * Custom commands for cross-cutting flows (auth, cart seeding). Keep types
+ * in cypress/types/index.d.ts in sync.
  *
- * Demoblaze's API reports failures as HTTP 200 with an { errorMessage } body,
- * so cy.request's built-in non-2xx check never catches them. Every command
- * below asserts the body itself, so a failed setup step fails the test
- * immediately with a clear message instead of surfacing minutes later as an
- * unrelated assertion.
+ * Demoblaze reports API failures as HTTP 200 + { errorMessage }, which
+ * cy.request's status check misses — so every command asserts the body
+ * itself and fails fast instead of surfacing as a confusing later error.
  */
 
 const apiUrl = () => Cypress.env('apiUrl') as string;
@@ -22,12 +19,7 @@ function failOnApiError(body: unknown, context: string): void {
   }
 }
 
-/**
- * Logs in directly against the API (mirrors the exact request the UI sends)
- * and sets the "tokenp_" session cookie, so specs that are not testing the
- * login flow itself can start from an authenticated state without driving
- * the login UI. Returns the resolved token.
- */
+/** Logs in via the API and sets the "tokenp_" session cookie. Returns the token. */
 Cypress.Commands.add('loginByApi', (username: string, password: string) => {
   return cy
     .request({
@@ -42,12 +34,7 @@ Cypress.Commands.add('loginByApi', (username: string, password: string) => {
     });
 });
 
-/**
- * Adds a product to the currently authenticated cart via the API — used to
- * seed cart state for cart/checkout specs so they don't have to re-drive
- * product selection and "Add to cart" UI just to get to their starting
- * point. Requires cy.loginByApi to have run first in the same test.
- */
+/** Adds a product to the cart via the API, for seeding state. Requires loginByApi first. */
 Cypress.Commands.add('addProductToCartByApi', (productId: number) => {
   cy.getCookie('tokenp_').then((cookie) => {
     if (!cookie) {
@@ -68,10 +55,7 @@ Cypress.Commands.add('addProductToCartByApi', (productId: number) => {
   });
 });
 
-/**
- * Returns the authenticated user's cart items via /viewcart.
- * Requires cy.loginByApi to have run first in the same test.
- */
+/** Returns the authenticated user's cart items via /viewcart. Requires loginByApi first. */
 Cypress.Commands.add('getCartItemsByApi', () => {
   return cy.getCookie('tokenp_').then((cookie) => {
     if (!cookie) {
@@ -91,14 +75,10 @@ Cypress.Commands.add('getCartItemsByApi', () => {
 });
 
 /**
- * Clears every item in the given user's cart via the API.
- *
- * NOTE: /deletecart keys the cart by USERNAME, not by the auth token —
- * confirmed by inspecting stored cart items via /viewcart, whose "cookie"
- * field holds the plain username even though /addtocart was called with the
- * token. This matches what the app itself does (cart.js's purchaseOrder()
- * calls deleteCart(usern), the username from /check — not the token), so
- * this command follows the same contract intentionally, not by mistake.
+ * Clears the given user's cart via the API.
+ * NOTE: /deletecart keys the cart by USERNAME, not by token — confirmed via
+ * /viewcart's "cookie" field, and matches the app's own cart.js behavior.
+ * Intentional, not a bug.
  */
 Cypress.Commands.add('clearCartByApi', (username: string) => {
   cy.request({

@@ -1,9 +1,5 @@
 import BasePage from './BasePage';
 
-/**
- * Cart page (/cart.html): added products with per-item delete links, the
- * order total, and the "Place Order" button that opens the checkout modal.
- */
 class CartPage extends BasePage {
   protected readonly path = '/cart.html';
 
@@ -24,11 +20,15 @@ class CartPage extends BasePage {
   }
 
   deleteProduct(productName: string): void {
-    this.cartRows.contains('tr', productName).contains('Delete').click();
+    this.getProductRow(productName).contains('Delete').click();
   }
 
   getCartRows(): Cypress.Chainable<JQuery<HTMLElement>> {
     return this.cartRows;
+  }
+
+  getProductRow(productName: string): Cypress.Chainable<JQuery<HTMLTableRowElement>> {
+    return this.cartRows.contains('tr', productName);
   }
 
   getTotalPrice(): Cypress.Chainable<JQuery<HTMLElement>> {

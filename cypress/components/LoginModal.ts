@@ -1,9 +1,5 @@
 import BaseModal from './BaseModal';
 
-/**
- * Log-in modal (navbar → "Log in"). Shell behavior comes from BaseModal;
- * only the login form lives here.
- */
 class LoginModal extends BaseModal {
   constructor() {
     super('#logInModal');
@@ -21,7 +17,6 @@ class LoginModal extends BaseModal {
     return this.root.contains('button', 'Log in');
   }
 
-  /** Types into the username/password fields without submitting the form. */
   fillCredentials(username: string, password: string): void {
     this.waitUntilReady();
     this.usernameInput.type(username).should('have.value', username);
@@ -33,7 +28,6 @@ class LoginModal extends BaseModal {
     this.submit();
   }
 
-  /** Clicks "Log in" without filling the form (empty-credentials scenario). */
   submit(): void {
     this.logInButton.click();
   }

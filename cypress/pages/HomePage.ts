@@ -1,6 +1,5 @@
 import BasePage from './BasePage';
 
-/** Home page: product grid. */
 class HomePage extends BasePage {
   protected readonly path = '/';
 

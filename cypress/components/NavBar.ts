@@ -1,6 +1,5 @@
 /**
- * Top navigation bar — rendered on every page of demoblaze, so it lives as
- * a shared component instead of being repeated in each page object.
+ * Top navigation bar — rendered on every page of demoblaze.
  */
 class NavBar {
   private get logInLink() {

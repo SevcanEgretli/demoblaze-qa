@@ -103,7 +103,11 @@ describe('Cart API', () => {
     addToCart(keepId, laptop.id);
     addToCart(removeId, otherLaptop.id);
 
-    cy.request({ method: 'POST', url: `${apiUrl}/deleteitem`, body: { id: removeId } });
+    cy.request({ method: 'POST', url: `${apiUrl}/deleteitem`, body: { id: removeId } }).then(
+      (response) => {
+        expect(response.status).to.equal(200);
+      },
+    );
 
     viewCart().then((response) => {
       const ids = (response.body.Items as CartItem[]).map((item) => item.id);
@@ -116,8 +120,12 @@ describe('Cart API', () => {
     const firstEntryId = uniqueCartEntryId();
     const secondEntryId = uniqueCartEntryId();
 
-    addToCart(firstEntryId, laptop.id);
-    addToCart(secondEntryId, otherLaptop.id);
+    addToCart(firstEntryId, laptop.id).then((response) => {
+      expect(response.status).to.equal(200);
+    });
+    addToCart(secondEntryId, otherLaptop.id).then((response) => {
+      expect(response.status).to.equal(200);
+    });
 
     viewCart().then((response) => {
       const items = response.body.Items as CartItem[];
@@ -126,11 +134,8 @@ describe('Cart API', () => {
     });
   });
 
-  // NOTE: verified manually against the live API — /addtocart does NOT
-  // validate that prod_id refers to a real product. It responds 200 and
-  // silently stores whatever id is sent, with no errorMessage. There is no
-  // rejection to test here; this documents the actual (surprising) contract
-  // instead of asserting behavior the API doesn't have.
+  // /addtocart doesn't validate prod_id — it silently stores any id with no
+  // errorMessage. Documenting this actual (surprising) contract, not a bug.
   it('accepts addtocart for a product id that does not exist, without validation', () => {
     const entryId = uniqueCartEntryId();
     const nonExistentProductId = 999999;

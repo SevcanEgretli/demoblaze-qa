@@ -28,6 +28,12 @@ class CheckoutModal extends BaseModal {
     return this.root.find('#card');
   }
 
+  // Populated by cart.js when the cart page loads (not when the modal
+  // opens), from the same total shown in CartPage.getTotalPrice().
+  private get totalLabel() {
+    return this.root.find('#totalm');
+  }
+
   private get monthInput() {
     return this.root.find('#month');
   }
@@ -40,8 +46,6 @@ class CheckoutModal extends BaseModal {
     return this.root.contains('button', 'Purchase');
   }
 
-  // The sweetalert confirmation renders outside #orderModal, so these two
-  // cannot be scoped to the modal root.
   private get confirmationDialog() {
     return cy.get('.sweet-alert');
   }
@@ -65,18 +69,21 @@ class CheckoutModal extends BaseModal {
   }
 
   confirmPurchase(): void {
-    // sweetalert only wires up its confirm-click handler once the container
-    // carries the "visible" class, which is added slightly after the
-    // "showSweetAlert" animation class — clicking before that closes the
-    // dialog visually but silently skips the confirm callback (no
-    // navigation). Wait for it explicitly, the same lesson as
-    // BaseModal.waitUntilReady for Bootstrap modals.
+    // Clicking before sweetalert adds "visible" skips its confirm callback silently.
     this.confirmationDialog.should('have.class', 'visible');
     this.confirmationOkButton.click();
   }
 
   getConfirmationDialog(): Cypress.Chainable<JQuery<HTMLElement>> {
     return this.confirmationDialog;
+  }
+
+  getTotal(): Cypress.Chainable<JQuery<HTMLElement>> {
+    return this.totalLabel;
+  }
+
+  getCreditCardInput(): Cypress.Chainable<JQuery<HTMLElement>> {
+    return this.creditCardInput;
   }
 }
 

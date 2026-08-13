@@ -37,6 +37,7 @@ describe('Cart', () => {
     CartPage.visit();
 
     CartPage.getCartRows().should('have.length', 1).and('contain.text', primary.title);
+    CartPage.getProductRow(primary.title).should('contain.text', String(primary.price));
     CartPage.getTotalPrice().should('have.text', String(primary.price));
   });
 
@@ -46,7 +47,10 @@ describe('Cart', () => {
     CartPage.visit();
 
     CartPage.getCartRows().should('have.length', 2);
-    CartPage.getCartRows().should('contain.text', primary.title).and('contain.text', secondary.title);
+    CartPage.getProductRow(primary.title).should('contain.text', String(primary.title));
+    CartPage.getProductRow(secondary.title).should('contain.text', String(secondary.title));
+    CartPage.getProductRow(primary.title).should('contain.text', String(primary.price));
+    CartPage.getProductRow(secondary.title).should('contain.text', String(secondary.price));
     CartPage.getTotalPrice().should('have.text', String(primary.price + secondary.price));
   });
 
@@ -72,5 +76,7 @@ describe('Cart', () => {
     CartPage.placeOrder();
 
     CheckoutModal.getRoot().should('be.visible');
+    CheckoutModal.getTotal().should('contain.text', `Total: ${primary.price}`);
+    CheckoutModal.getCreditCardInput().should('be.visible');
   });
 });
